@@ -30,7 +30,8 @@ class headerGenExporter:
         self.endIf = self.definePrefix + 'endif'
 
     #---------------------------------------------------------------------------
-    def export(self, node, path):
+    def export(self, node, path, top_level):
+
         # Make sure output directory structure exists
         if os.path.dirname(path):
             os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -78,12 +79,12 @@ class headerGenExporter:
             for child in node.children(unroll=True):
                 if not isinstance(child, AddressableNode):
                     continue
-                self.add_addressBlock(child)
+                self.add_addressBlock(child, top_level)
         else:
             # Not exploding apart the top-level node
             # Wrap it in a dummy memoryMap that bears it's name
             # Export top-level node as a single addressBlock
-            self.add_addressBlock(node)
+            self.add_addressBlock(node, top_level)
 
         self.headerFileContent.append("\n" + self.endIf)
         # Write out UVM RegModel file
@@ -98,16 +99,17 @@ class headerGenExporter:
     def add_content(self, content):
         self.headerFileContent.append(self.define + content)
     #---------------------------------------------------------------------------
-    def add_addressBlock(self, node):
+    def add_addressBlock(self, node, top_level):
 
         self.add_content("{}_BASE_ADDR {}{:02X}".format(node.inst_name.upper(), self.hexPrefix, node.absolute_address))
         self.baseAddressName = ("`%s_BASE_ADDR" % node.inst_name.upper()) if self.languages == "verilog" else ("%s_BASE_ADDR" % node.inst_name.upper())
 
-        for child in node.children():
-            if isinstance(child, RegNode):
-                self.add_register(node, child)
-            elif isinstance(child, (AddrmapNode, RegfileNode)):
-                self.add_registerFile(child)
+        if not top_level:
+            for child in node.children():
+                if isinstance(child, RegNode):
+                    self.add_register(node, child)
+                elif isinstance(child, (AddrmapNode, RegfileNode)):
+                    self.add_registerFile(child)
 
     def add_registerFile(self, node):
         for child in node.children():

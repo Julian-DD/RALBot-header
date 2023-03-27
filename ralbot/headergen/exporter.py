@@ -101,10 +101,16 @@ class headerGenExporter:
     #---------------------------------------------------------------------------
     def add_addressBlock(self, node, top_level):
 
-        self.add_content("{}_BASE_ADDR {}{:02X}".format(node.inst_name.upper(), self.hexPrefix, node.absolute_address))
-        self.baseAddressName = ("`%s_BASE_ADDR" % node.inst_name.upper()) if self.languages == "verilog" else ("%s_BASE_ADDR" % node.inst_name.upper())
+        if top_level:
+            self.add_content("{}_BASE_ADDR {}{:02X}".format(node.inst_name.upper(), self.hexPrefix, node.absolute_address))
+            self.baseAddressName = ("`%s_BASE_ADDR" % node.inst_name.upper()) if self.languages == "verilog" else ("%s_BASE_ADDR" % node.inst_name.upper())
+        else:
+            if self.languages == "verilog":
+                self.add_content("{}_BASE_ADDR {}{:02X}".format(node.inst_name.upper(), self.hexPrefix, node.absolute_address))
+                self.baseAddressName = ("`%s_BASE_ADDR" % node.inst_name.upper())
+            else:
+                self.baseAddressName = ("%s_BASE_ADDR" % node.inst_name.upper())
 
-        if not top_level:
             for child in node.children():
                 if isinstance(child, RegNode):
                     self.add_register(node, child)
@@ -129,7 +135,7 @@ class headerGenExporter:
             self.add_content(regMacro + " %s + %s%x + %s*%s%x" % (self.baseAddressName, self.hexPrefix, node.raw_address_offset, X, self.hexPrefix, node.array_stride))            
         else:
             regMacro = parent.inst_name.upper() + "_" + node.inst_name.upper()
-            self.add_content(regMacro + " %s + %s%x" % (self.baseAddressName, self.hexPrefix, node.address_offset))
+            self.add_content(regMacro + " %s + %s%x" % (self.baseAddressName, self.hexPrefix, node.absolute_address))
 
         for field in node.fields():
             self.add_field(node, field)

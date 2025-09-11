@@ -30,7 +30,7 @@ class headerGenExporter:
         self.endIf = self.definePrefix + 'endif'
 
     #---------------------------------------------------------------------------
-    def export(self, node, path, top_level):
+    def export(self, node, path, top_level=False):
 
         # Make sure output directory structure exists
         if os.path.dirname(path):
